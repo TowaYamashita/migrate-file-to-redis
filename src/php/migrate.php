@@ -36,7 +36,7 @@ try {
       throw new Exception("ファイル {$filename} の内容を読み込めませんでした。\n");
     }
 
-    if (!$redis->set($key, $content)) {
+    if (!$redis->set("PHPREDIS_SESSION:$key", $content)) {
       throw new Exception("キー {$key} に対してRedisへのデータ保存に失敗しました。\n");
     }
   }

@@ -24,17 +24,21 @@ try {
       continue;
     }
 
+    if($fileInfo->getSize() === 0) {
+		  continue;
+    }
+
     $filename = $fileInfo->getFilename();
 		if(!str_contains($filename, 'sess_')){
 			continue;
 		}
 
     $key = str_replace('sess_', '', $filename);
-    if (!$redis->del($key)) {
+    if (!$redis->del("PHPREDIS_SESSION:$key")) {
       throw new Exception("キー {$key} を削除に失敗しました。\n");
     }
 
-    if(!unlink($filename)){
+    if(!unlink($directory . "/" . $filename)){
       throw new Exception("ファイル {$filename} の削除に失敗しました。\n");
     }
   }

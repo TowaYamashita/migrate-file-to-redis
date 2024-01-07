@@ -34,7 +34,7 @@ try {
 		}
 
     $key = str_replace('sess_', '', $filename);
-	  $contentFromRedis = $redis->get($key);
+	  $contentFromRedis = $redis->get("PHPREDIS_SESSION:$key");
 		if(!$contentFromRedis){
 			throw new Exception("キー {$key} はRedisに存在しません。\n");
 		}
