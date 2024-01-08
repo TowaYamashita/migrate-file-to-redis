@@ -1,33 +1,47 @@
-import * as cdk from 'aws-cdk-lib';
+import { Stack, StackProps } from 'aws-cdk-lib';
 import { CfnOutput } from 'aws-cdk-lib';
-import { Instance, InstanceType, MachineImage, UserData, Vpc } from 'aws-cdk-lib/aws-ec2';
 import { Construct } from 'constructs';
+import { SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
+import { SessionStorageStack } from './session-storage-stack';
+import { ComputingStack } from './computing-stack';
 
-export class MigrateFileToRedisStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+export class MigrateFileToRedisStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
     super(scope, id, props);
 
     const vpc = new Vpc(this, 'VPC', {
-      maxAzs: 1,
+      subnetConfiguration: [
+        {
+          cidrMask: 24,
+          name: 'redis',
+          subnetType: SubnetType.PUBLIC,
+        },
+        {
+          cidrMask: 24,
+          name: 'instance',
+          subnetType: SubnetType.PUBLIC,
+        }
+      ],
     });
 
-    // ./docs/1_golden_image_memo.md を参考にAMIを手動で us-west-2 リージョンに作成してAMIの値を置き換えてください。
-    const amiMap = {
-      'us-west-2': 'ami-0994d90c75d269a9f',
-    };
+    const sessionStorage = new SessionStorageStack(this, 'SessionStorage', {
+      vpc: vpc,
+      selectSubnets: vpc.selectSubnets({ subnetGroupName: 'redis' }),
+    });
 
-    const userData = UserData.forLinux();
-    userData.addCommands(
-      'git clone https://github.com/TowaYamashita/migrate-file-to-redis.git /home/ssm-user/exp',
-    );
+    const instance = new ComputingStack(this, 'Computing', {
+      vpc: vpc,
+      selectSubnets: vpc.selectSubnets({ subnetGroupName: 'instance' }),
+      readPasswordPolicy: sessionStorage.readPasswordPolicy,
+      redisClusterSecurityGroupId: sessionStorage.redisClusterSecurityGroupId,
+    });
 
-    // EC2インスタンスの作成
-    const instance = new Instance(this, 'Instance', {
-      vpc,
-      instanceType: new InstanceType('t3.micro'),
-      machineImage: MachineImage.genericLinux(amiMap),
-      userData: userData,
-      ssmSessionPermissions: true,
+    new CfnOutput(this, 'RedisClusterEndpoint', {
+      value: sessionStorage.endpoint,
+    });
+
+    new CfnOutput(this, 'SecretManagerPasswordName', {
+      value: sessionStorage.secretName,
     });
 
     const instanceId = instance.instanceId;
