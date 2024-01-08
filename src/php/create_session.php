@@ -3,7 +3,7 @@
 $totalSessionSize = (int) $argv[1];
 
 try {
-	$directory = session_save_path();
+  $directory = session_save_path();
   if (!file_exists($directory) || !is_dir($directory)) {
     throw new Exception("ディレクトリが存在しないか、読み込めません。\n");
   }
@@ -36,7 +36,7 @@ try {
     addSessionData();
     $currentSize = getSessionDirectorySize();
     if ($currentSize >= $totalSessionSize * 1024 * 1024) {
-        break;
+      break;
     }
     session_write_close();
     session_id(uniqid());
