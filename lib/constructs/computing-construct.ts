@@ -9,7 +9,7 @@ interface ComputingProps {
   redisClusterSecurityGroupId: string;
 }
 
-export class ComputingStack extends Construct {
+export class ComputingConstruct extends Construct {
   readonly instanceId : string;
 
   constructor(scope: Construct, id: string, props: ComputingProps){

@@ -9,7 +9,7 @@ interface SessionStorageProps {
   selectSubnets: SelectedSubnets;
 }
 
-export class SessionStorageStack extends Construct {
+export class SessionStorageConstruct extends Construct {
   readonly secretName : string;
   readonly redisClusterSecurityGroupId: string;
   readonly endpoint: string;

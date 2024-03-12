@@ -2,8 +2,8 @@ import { Stack, StackProps } from 'aws-cdk-lib';
 import { CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { SubnetType, Vpc } from 'aws-cdk-lib/aws-ec2';
-import { SessionStorageStack } from './session-storage-stack';
-import { ComputingStack } from './computing-stack';
+import { SessionStorageConstruct } from './constructs/session-storage-construct';
+import { ComputingConstruct } from './constructs/computing-construct';
 
 export class MigrateFileToRedisStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -24,12 +24,12 @@ export class MigrateFileToRedisStack extends Stack {
       ],
     });
 
-    const sessionStorage = new SessionStorageStack(this, 'SessionStorage', {
+    const sessionStorage = new SessionStorageConstruct(this, 'SessionStorage', {
       vpc: vpc,
       selectSubnets: vpc.selectSubnets({ subnetGroupName: 'redis' }),
     });
 
-    const instance = new ComputingStack(this, 'Computing', {
+    const instance = new ComputingConstruct(this, 'Computing', {
       vpc: vpc,
       selectSubnets: vpc.selectSubnets({ subnetGroupName: 'instance' }),
       readPasswordPolicy: sessionStorage.readPasswordPolicy,
